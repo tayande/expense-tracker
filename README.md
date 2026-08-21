@@ -1,7 +1,6 @@
 # Expense Tracker
 
-A simple Python expense tracker with two interfaces — a command-line tool
-and a Flask web app — sharing the same core logic and JSON data file.
+A simple Python expense tracker with two interfaces which include a command-line tool and a Flask web app sharing the same core logic and JSON data file.
 
 ## Features
 - Add, list, filter, and delete expenses
