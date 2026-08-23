@@ -1,28 +1,27 @@
-# Expense Tracker
+# Expense Tracker 
 
-A simple Python expense tracker with two interfaces which include a command-line tool and a Flask web app sharing the same core logic and JSON data file.
-
-## Features
-- Add, list, filter, and delete expenses
-- Category-based spending summary
-- CLI and web UI, both backed by the same tracker logic
+A beginner-friendly expense tracker with two ways to use it: a
+command-line tool and a web app. Both save to the same expenses.json
+file using plain functions and dictionaries — no classes involved.
 
 ## Setup
 pip install flask
 
 ## Usage
-# Web app
-python3 app.py            # then visit http://127.0.0.1:5000
 
-# CLI
-python3 cli.py add --amount 25.50 --category food --note "Lunch"
-python3 cli.py list
-python3 cli.py summary
+### Command line
+python3 cli_simple.py add 25.50 food "Lunch"
+python3 cli_simple.py list
+python3 cli_simple.py delete 1
+python3 cli_simple.py summary
 
-## Structure
-tracker.py       - core Expense/ExpenseTracker logic
-cli.py            - command-line interface
-app.py            - Flask web interface
-templates/        - HTML templates
-static/           - CSS
-expenses.json     - data file (auto-created)
+### Web app
+python3 app_simple.py
+# then open http://127.0.0.1:5000 in the browser
+
+## Files
+cli_simple.py              - command-line version
+app_simple.py               - web version (needs Flask)
+templates/index_simple.html - web page layout
+static/style_simple.css     - web page styling
+expenses.json                - where data is saved (created automatically)

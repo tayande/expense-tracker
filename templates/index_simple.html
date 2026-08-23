@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Expense Tracker</title>
+    <link rel="stylesheet" href="/static/style_simple.css">
+</head>
+<body>
+    <h1>Expense Tracker</h1>
+
+    {% if error %}
+        <p class="error">{{ error }}</p>
+    {% endif %}
+
+    <h2>Add Expense</h2>
+    <form action="/add" method="post">
+        <input type="text" name="amount" placeholder="Amount">
+        <input type="text" name="category" placeholder="Category">
+        <input type="text" name="note" placeholder="Note (optional)">
+        <button type="submit">Add</button>
+    </form>
+
+    <h2>Summary</h2>
+    {% if totals %}
+        <ul>
+            {% for category, amount in totals.items() %}
+                <li>{{ category }}: {{ "%.2f"|format(amount) }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No expenses yet.</p>
+    {% endif %}
+
+    <h2>All Expenses</h2>
+    {% if expenses %}
+        <table>
+            <tr>
+                <th>Category</th>
+                <th>Amount</th>
+                <th>Note</th>
+                <th></th>
+            </tr>
+            {% for e in expenses %}
+            <tr>
+                <td>{{ e.category }}</td>
+                <td>{{ "%.2f"|format(e.amount) }}</td>
+                <td>{{ e.note }}</td>
+                <td>
+                    <form action="/delete/{{ e.id }}" method="post">
+                        <button type="submit">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <p>No expenses yet.</p>
+    {% endif %}
+</body>
+</html>

@@ -1,0 +1,20 @@
+[
+  {
+    "id": 1,
+    "amount": 20000.0,
+    "category": "food",
+    "note": "bought food for  the first time"
+  },
+  {
+    "id": 2,
+    "amount": 340000.0,
+    "category": "clothes",
+    "note": "bought a nice cloth"
+  },
+  {
+    "id": 3,
+    "amount": 2500.0,
+    "category": "clothes",
+    "note": "flexing"
+  }
+]
