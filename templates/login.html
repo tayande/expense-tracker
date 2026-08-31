@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Log In - Expense Tracker</title>
+    <link rel="stylesheet" href="/static/style_simple.css">
+</head>
+<body>
+    <div class="auth-wrapper">
+        <h1>Log In</h1>
+        {% if error %}
+            <p class="error">{{ error }}</p>
+        {% endif %}
+        <form action="/login" method="post">
+            <input type="text" name="username" placeholder="Username" required>
+            <input type="password" name="password" placeholder="Password" required>
+            <button type="submit">Log In</button>
+        </form>
+        <p class="switch-link">Don't have an account? <a href="/signup">Sign up</a></p>
+    </div>
+</body>
+</html>

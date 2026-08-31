@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sign Up - Expense Tracker</title>
+    <link rel="stylesheet" href="/static/style_simple.css">
+</head>
+<body>
+    <div class="auth-wrapper">
+        <h1>Create Account</h1>
+        {% if error %}
+            <p class="error">{{ error }}</p>
+        {% endif %}
+        <form action="/signup" method="post">
+            <input type="text" name="username" placeholder="Username" required>
+            <input type="password" name="password" placeholder="Password" required>
+            <button type="submit">Sign Up</button>
+        </form>
+        <p class="switch-link">Already have an account? <a href="/login">Log in</a></p>
+    </div>
+</body>
+</html>
