@@ -1,72 +1,99 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Expense Tracker</title>
-    <link rel="stylesheet" href="/static/style_simple.css">
-</head>
-<body>
-    <div class="topbar">
-        <h1>Expense Tracker</h1>
-        <div class="user-info">
-            Signed in as <strong>{{ username }}</strong>
-            <a href="/logout">Log out</a>
-        </div>
-    </div>
+{% extends "base.html" %}
+{% block title %}Dashboard - Expense Tracker{% endblock %}
+{% block content %}
 
-    {% if error %}
-        <p class="error">{{ error }}</p>
+<h2>Add Expense</h2>
+<div class="card">
+    <form action="{{ url_for('add') }}" method="post" class="add-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="number" step="0.01" min="0.01" name="amount" placeholder="Amount" required>
+        <select name="category" required>
+            <option value="" disabled selected>Category</option>
+            {% for c in categories %}
+                <option value="{{ c }}">{{ c }}</option>
+            {% endfor %}
+        </select>
+        <input type="date" name="expense_date" value="{{ today }}" required>
+        <input type="text" name="note" placeholder="Note (optional)" maxlength="255">
+        <button type="submit">Add</button>
+    </form>
+</div>
+
+<h2>Summary {% if selected_month %}({{ selected_month }}){% endif %}</h2>
+<div class="card">
+    <form method="get" class="filter-form">
+        <select name="month" onchange="this.form.submit()">
+            <option value="">All time</option>
+            {% for m in available_months %}
+                <option value="{{ m }}" {% if m == selected_month %}selected{% endif %}>{{ m }}</option>
+            {% endfor %}
+        </select>
+        <select name="category" onchange="this.form.submit()">
+            <option value="">All categories</option>
+            {% for c in categories %}
+                <option value="{{ c }}" {% if c == selected_category %}selected{% endif %}>{{ c }}</option>
+            {% endfor %}
+        </select>
+        {% if selected_month or selected_category %}
+            <a href="{{ url_for('index') }}" class="clear-link">Clear filters</a>
+        {% endif %}
+    </form>
+
+    {% if totals %}
+        <ul class="totals-list">
+            {% for category, amount in totals.items()|sort %}
+                <li><span>{{ category }}</span><span>${{ "%.2f"|format(amount) }}</span></li>
+            {% endfor %}
+        </ul>
+        <p class="grand-total">Total: ${{ "%.2f"|format(grand_total) }}</p>
+    {% else %}
+        <p class="empty-state">No expenses match this filter yet.</p>
     {% endif %}
+</div>
 
-    <h2>Add Expense</h2>
-    <div class="card">
-        <form action="/add" method="post">
-            <input type="text" name="amount" placeholder="Amount">
-            <input type="text" name="category" placeholder="Category">
-            <input type="text" name="note" placeholder="Note (optional)">
-            <button type="submit">Add</button>
-        </form>
-    </div>
+<h2>All Expenses</h2>
+<div class="card">
+    {% if expenses %}
+        <table>
+            <tr>
+                <th>Date</th>
+                <th>Category</th>
+                <th>Amount</th>
+                <th>Note</th>
+                <th></th>
+            </tr>
+            {% for e in expenses %}
+            <tr>
+                <td>{{ e.expense_date.strftime("%b %d, %Y") }}</td>
+                <td>{{ e.category }}</td>
+                <td>${{ "%.2f"|format(e.amount) }}</td>
+                <td>{{ e.note }}</td>
+                <td class="row-actions">
+                    <a href="{{ url_for('edit', expense_id=e.id) }}" class="edit-link">Edit</a>
+                    <form action="{{ url_for('delete', expense_id=e.id) }}" method="post" class="inline-form delete-form">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn-danger">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
 
-    <h2>Summary</h2>
-    <div class="card">
-        {% if totals %}
-            <ul>
-                {% for category, amount in totals.items() %}
-                    <li>{{ category }}: {{ "%.2f"|format(amount) }}</li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <p>No expenses yet.</p>
+        {% if pagination.pages > 1 %}
+        <div class="pagination">
+            {% if pagination.has_prev %}
+                <a href="{{ url_for('index', page=pagination.prev_num, month=selected_month, category=selected_category) }}">&laquo; Prev</a>
+            {% endif %}
+            <span>Page {{ pagination.page }} of {{ pagination.pages }}</span>
+            {% if pagination.has_next %}
+                <a href="{{ url_for('index', page=pagination.next_num, month=selected_month, category=selected_category) }}">Next &raquo;</a>
+            {% endif %}
+        </div>
         {% endif %}
-    </div>
 
-    <h2>All Expenses</h2>
-    <div class="card">
-        {% if expenses %}
-            <table>
-                <tr>
-                    <th>Category</th>
-                    <th>Amount</th>
-                    <th>Note</th>
-                    <th></th>
-                </tr>
-                {% for e in expenses %}
-                <tr>
-                    <td>{{ e.category }}</td>
-                    <td>{{ "%.2f"|format(e.amount) }}</td>
-                    <td>{{ e.note }}</td>
-                    <td>
-                        <form action="/delete/{{ e.id }}" method="post">
-                            <button type="submit">Delete</button>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
-            </table>
-        {% else %}
-            <p>No expenses yet.</p>
-        {% endif %}
-    </div>
-</body>
-</html>
+        <a href="{{ url_for('export_csv') }}" class="export-link">Export all as CSV</a>
+    {% else %}
+        <p class="empty-state">No expenses yet — add your first one above.</p>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Edit Expense - Expense Tracker{% endblock %}
+{% block content %}
+<h2>Edit Expense</h2>
+<div class="card">
+    <form action="{{ url_for('edit', expense_id=expense.id) }}" method="post" class="edit-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <label>Amount
+            <input type="number" step="0.01" min="0.01" name="amount" value="{{ expense.amount }}" required>
+        </label>
+
+        <label>Category
+            <select name="category" required>
+                {% for c in categories %}
+                    <option value="{{ c }}" {% if c == expense.category %}selected{% endif %}>{{ c }}</option>
+                {% endfor %}
+            </select>
+        </label>
+
+        <label>Date
+            <input type="date" name="expense_date" value="{{ expense.expense_date.isoformat() }}" required>
+        </label>
+
+        <label>Note
+            <input type="text" name="note" value="{{ expense.note or '' }}" maxlength="255">
+        </label>
+
+        <div class="edit-actions">
+            <button type="submit">Save Changes</button>
+            <a href="{{ url_for('index') }}" class="cancel-link">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

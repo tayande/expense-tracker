@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Error {{ code }} - Expense Tracker{% endblock %}
+{% block content %}
+<div class="auth-wrapper">
+    <h1>{{ code }}</h1>
+    <p style="color: var(--text-muted); margin-top: 10px;">{{ message }}</p>
+    <p class="switch-link"><a href="{{ url_for('index') }}">Back to dashboard</a></p>
+</div>
+{% endblock %}

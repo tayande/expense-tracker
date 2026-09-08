@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Verify Email - Expense Tracker{% endblock %}
+{% block content %}
+<div class="auth-wrapper">
+    <h1>Verify Your Email</h1>
+    <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: -10px;">
+        We sent a code to your email. Enter it below to finish creating your account.
+        If it doesn't arrive within a minute or two, check your spam folder.
+    </p>
+    <form action="{{ url_for('verify_email') }}" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="email" name="email" placeholder="Email" value="{{ prefill_email }}" required>
+        <input type="text" name="code" placeholder="6-digit code" required maxlength="6" pattern="\d{6}">
+        <button type="submit">Verify</button>
+    </form>
+    <p class="switch-link"><a href="{{ url_for('resend_verification') }}">Didn't get a code? Resend it</a></p>
+</div>
+{% endblock %}
