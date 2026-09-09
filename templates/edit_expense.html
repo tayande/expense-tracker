@@ -1,12 +1,12 @@
 {% extends "base.html" %}
-{% block title %}Edit Expense - Expense Tracker{% endblock %}
+{% block title %}Edit Expense - Prism{% endblock %}
 {% block content %}
 <h2>Edit Expense</h2>
 <div class="card">
     <form action="{{ url_for('edit', expense_id=expense.id) }}" method="post" class="edit-form">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-        <label>Amount
+        <label>Amount ({{ currency_symbol }})
             <input type="number" step="0.01" min="0.01" name="amount" value="{{ expense.amount }}" required>
         </label>
 

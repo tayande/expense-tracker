@@ -17,8 +17,9 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import extract
 
 from config import Config
-from models import db, User, Expense, CATEGORIES
+from models import db, User, Expense, CATEGORIES, CURRENCIES, CURRENCY_SYMBOLS
 from mailer import send_reset_code_email, send_verification_code_email
+from ai_content import get_daily_quote
 
 EMAIL_RE_SIMPLE_CHECK = lambda s: "@" in s and "." in s.split("@")[-1] and len(s) <= 255
 
@@ -75,6 +76,17 @@ def create_app(config_class=Config):
         return db.session.get(User, int(user_id))
 
     # ---------------------------------------------------------------
+    # Public landing page
+    # ---------------------------------------------------------------
+
+    @app.route("/")
+    def landing():
+        if current_user.is_authenticated:
+            return redirect(url_for("index"))
+        quote = get_daily_quote(app)
+        return render_template("landing.html", quote=quote)
+
+    # ---------------------------------------------------------------
     # Auth
     # ---------------------------------------------------------------
 
@@ -85,42 +97,48 @@ def create_app(config_class=Config):
             username = request.form.get("username", "").strip().lower()
             email = request.form.get("email", "").strip().lower()
             password = request.form.get("password", "")
+            currency_code = request.form.get("currency_code", "USD")
 
             if not username or not email or not password:
                 flash("All fields are required.", "error")
-                return render_template("signup.html")
+                return render_template("signup.html", currencies=CURRENCIES)
 
             if not EMAIL_RE_SIMPLE_CHECK(email):
                 flash("Please enter a valid email address.", "error")
-                return render_template("signup.html")
+                return render_template("signup.html", currencies=CURRENCIES)
 
             if len(password) < 8:
                 flash("Password must be at least 8 characters.", "error")
-                return render_template("signup.html")
+                return render_template("signup.html", currencies=CURRENCIES)
+
+            if currency_code not in CURRENCY_SYMBOLS:
+                flash("Please choose a valid currency.", "error")
+                return render_template("signup.html", currencies=CURRENCIES)
 
             existing_email_user = User.query.filter_by(email=email).first()
             if existing_email_user:
                 if existing_email_user.email_verified:
                     flash("An account with that email already exists. Try logging in.", "error")
-                    return render_template("signup.html")
+                    return render_template("signup.html", currencies=CURRENCIES)
                 else:
                     try:
                         issue_verification_code(app, existing_email_user)
                     except Exception:
                         flash("We couldn't send the email right now. Please try again shortly.", "error")
-                        return render_template("signup.html")
+                        return render_template("signup.html", currencies=CURRENCIES)
                     flash("We found a pending signup for this email — we've resent your verification code.", "success")
                     return redirect(url_for("verify_email", email=email))
 
             if User.query.filter_by(username=username).first():
                 flash("That username is already taken.", "error")
-                return render_template("signup.html")
+                return render_template("signup.html", currencies=CURRENCIES)
 
             user = User(
                 username=username,
                 email=email,
                 password_hash=generate_password_hash(password),
                 email_verified=False,
+                currency_code=currency_code,
             )
             db.session.add(user)
             db.session.commit()
@@ -132,7 +150,7 @@ def create_app(config_class=Config):
 
             return redirect(url_for("verify_email", email=email))
 
-        return render_template("signup.html")
+        return render_template("signup.html", currencies=CURRENCIES)
 
     @app.route("/login", methods=["GET", "POST"])
     @limiter.limit("10 per minute")
@@ -286,7 +304,7 @@ def create_app(config_class=Config):
     # Expenses
     # ---------------------------------------------------------------
 
-    @app.route("/")
+    @app.route("/dashboard")
     @login_required
     def index():
         page = request.args.get("page", 1, type=int)
@@ -325,6 +343,7 @@ def create_app(config_class=Config):
             db.session.query(Expense.expense_date).filter_by(owner_id=current_user.id).distinct()
         ]
         available_months = sorted({d.strftime("%Y-%m") for d in all_dates}, reverse=True)
+        currency_symbol = CURRENCY_SYMBOLS.get(current_user.currency_code, "$")
 
         return render_template(
             "index.html",
@@ -337,6 +356,7 @@ def create_app(config_class=Config):
             selected_month=month_filter,
             selected_category=category_filter,
             today=date.today().isoformat(),
+            currency_symbol=currency_symbol,
         )
 
     @app.route("/add", methods=["POST"])
@@ -387,6 +407,8 @@ def create_app(config_class=Config):
             flash("Expense not found.", "error")
             return redirect(url_for("index"))
 
+        currency_symbol = CURRENCY_SYMBOLS.get(current_user.currency_code, "$")
+
         if request.method == "POST":
             amount_text = request.form.get("amount", "")
             category = request.form.get("category", "").strip()
@@ -399,17 +421,17 @@ def create_app(config_class=Config):
                     raise ValueError
             except ValueError:
                 flash("Amount must be a positive number.", "error")
-                return render_template("edit_expense.html", expense=expense, categories=CATEGORIES)
+                return render_template("edit_expense.html", expense=expense, categories=CATEGORIES, currency_symbol=currency_symbol)
 
             if category not in CATEGORIES:
                 flash("Please choose a valid category.", "error")
-                return render_template("edit_expense.html", expense=expense, categories=CATEGORIES)
+                return render_template("edit_expense.html", expense=expense, categories=CATEGORIES, currency_symbol=currency_symbol)
 
             try:
                 expense.expense_date = datetime.strptime(date_text, "%Y-%m-%d").date()
             except ValueError:
                 flash("Invalid date.", "error")
-                return render_template("edit_expense.html", expense=expense, categories=CATEGORIES)
+                return render_template("edit_expense.html", expense=expense, categories=CATEGORIES, currency_symbol=currency_symbol)
 
             expense.amount = round(amount, 2)
             expense.category = category
@@ -418,7 +440,23 @@ def create_app(config_class=Config):
             flash("Expense updated.", "success")
             return redirect(url_for("index"))
 
-        return render_template("edit_expense.html", expense=expense, categories=CATEGORIES)
+        return render_template("edit_expense.html", expense=expense, categories=CATEGORIES, currency_symbol=currency_symbol)
+
+    @app.route("/settings", methods=["GET", "POST"])
+    @login_required
+    def settings():
+        if request.method == "POST":
+            currency_code = request.form.get("currency_code", "")
+            if currency_code not in CURRENCY_SYMBOLS:
+                flash("Please choose a valid currency.", "error")
+                return render_template("settings.html", currencies=CURRENCIES)
+
+            current_user.currency_code = currency_code
+            db.session.commit()
+            flash("Settings updated.", "success")
+            return redirect(url_for("settings"))
+
+        return render_template("settings.html", currencies=CURRENCIES)
 
     @app.route("/delete/<int:expense_id>", methods=["POST"])
     @login_required

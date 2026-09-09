@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Sign Up - Expense Tracker{% endblock %}
+{% block title %}Sign Up - Prism{% endblock %}
 {% block content %}
 <div class="auth-wrapper">
     <h1>Create Account</h1>
@@ -7,6 +7,12 @@
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="text" name="username" placeholder="Username" required autofocus>
         <input type="email" name="email" placeholder="Email" required>
+        <select name="currency_code" required>
+            <option value="" disabled selected>Preferred Currency</option>
+            {% for code, symbol, name in currencies %}
+                <option value="{{ code }}">{{ code }} ({{ symbol }}) — {{ name }}</option>
+            {% endfor %}
+        </select>
         <input type="password" name="password" placeholder="Password (min. 8 characters)" required minlength="8">
         <button type="submit">Sign Up</button>
     </form>

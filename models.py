@@ -17,6 +17,22 @@ CATEGORIES = [
     "Other",
 ]
 
+CURRENCIES = [
+    ("USD", "$", "US Dollar"),
+    ("NGN", "₦", "Nigerian Naira"),
+    ("EUR", "€", "Euro"),
+    ("GBP", "£", "British Pound"),
+    ("GHS", "₵", "Ghanaian Cedi"),
+    ("KES", "KSh", "Kenyan Shilling"),
+    ("ZAR", "R", "South African Rand"),
+    ("INR", "₹", "Indian Rupee"),
+    ("JPY", "¥", "Japanese Yen"),
+    ("CAD", "CA$", "Canadian Dollar"),
+    ("AUD", "AU$", "Australian Dollar"),
+]
+
+CURRENCY_SYMBOLS = {code: symbol for code, symbol, _ in CURRENCIES}
+
 
 class User(db.Model, UserMixin):
     __tablename__ = "users"
@@ -33,6 +49,8 @@ class User(db.Model, UserMixin):
     email_verified = db.Column(db.Boolean, default=False, nullable=False)
     verification_code_hash = db.Column(db.String(255), nullable=True)
     verification_code_expires_at = db.Column(db.DateTime, nullable=True)
+
+    currency_code = db.Column(db.String(3), default="USD", nullable=False)
 
     expenses = db.relationship(
         "Expense", backref="owner", lazy=True, cascade="all, delete-orphan"

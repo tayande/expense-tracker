@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Settings - Prism{% endblock %}
+{% block content %}
+<h2>Settings</h2>
+<div class="card">
+    <form action="{{ url_for('settings') }}" method="post" class="edit-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <label>Username
+            <input type="text" value="{{ current_user.username }}" disabled>
+        </label>
+
+        <label>Email
+            <input type="text" value="{{ current_user.email }}" disabled>
+        </label>
+
+        <label>Preferred Currency
+            <select name="currency_code" required>
+                {% for code, symbol, name in currencies %}
+                    <option value="{{ code }}" {% if code == current_user.currency_code %}selected{% endif %}>{{ code }} ({{ symbol }}) — {{ name }}</option>
+                {% endfor %}
+            </select>
+        </label>
+
+        <div class="edit-actions">
+            <button type="submit">Save Changes</button>
+            <a href="{{ url_for('index') }}" class="cancel-link">Back to Dashboard</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

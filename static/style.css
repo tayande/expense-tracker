@@ -503,3 +503,136 @@ tr:hover td {
     gap: 10px;
     justify-content: center;
 }
+
+.landing-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 10px;
+}
+
+.landing-logo {
+    font-size: 1.4rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--primary);
+}
+
+.landing-nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.landing-nav-actions .btn,
+.landing-nav-actions .btn-secondary {
+    text-decoration: none;
+    font-size: 0.88rem;
+    padding: 8px 16px;
+}
+
+.landing-hero {
+    text-align: center;
+    padding: 60px 10px 30px;
+}
+
+.landing-headline {
+    font-size: 2.6rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.15;
+    margin: 0 0 16px;
+    background: linear-gradient(135deg, var(--primary), var(--success));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.landing-subheadline {
+    font-size: 1.1rem;
+    color: var(--text-muted);
+    max-width: 480px;
+    margin: 0 auto 32px;
+    line-height: 1.55;
+}
+
+.landing-cta {
+    display: flex;
+    justify-content: center;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.btn-lg {
+    padding: 14px 28px;
+    font-size: 1rem;
+    border-radius: 10px;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.landing-quote-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px 32px;
+    margin: 36px auto 0;
+    max-width: 560px;
+    text-align: center;
+    box-shadow: var(--shadow);
+}
+
+.landing-quote-label {
+    display: block;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--primary);
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.landing-quote-text {
+    font-size: 1.15rem;
+    font-style: italic;
+    color: var(--text);
+    line-height: 1.5;
+    margin: 0;
+}
+
+.landing-features {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+    margin: 50px 0 20px;
+}
+
+.landing-feature {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px 20px;
+    text-align: center;
+}
+
+.landing-feature h3 {
+    margin: 0 0 8px;
+    font-size: 1rem;
+    color: var(--text);
+}
+
+.landing-feature p {
+    margin: 0;
+    font-size: 0.87rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+
+@media (max-width: 640px) {
+    .landing-features {
+        grid-template-columns: 1fr;
+    }
+    .landing-headline {
+        font-size: 2rem;
+    }
+}

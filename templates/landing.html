@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Prism - Take Control of Your Money{% endblock %}
+{% block content %}
+
+<nav class="landing-nav">
+    <div class="landing-logo">Prism</div>
+    <div class="landing-nav-actions">
+        <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle theme">☾</button>
+        <a href="{{ url_for('login') }}" class="btn-secondary">Log In</a>
+        <a href="{{ url_for('signup') }}" class="btn">Sign Up</a>
+    </div>
+</nav>
+
+<section class="landing-hero">
+    <h1 class="landing-headline">Take control of your money story.</h1>
+    <p class="landing-subheadline">
+        Prism helps you track every expense, in your own currency, with a clarity you'll actually stick with.
+    </p>
+    <div class="landing-cta">
+        <a href="{{ url_for('signup') }}" class="btn btn-lg">Get Started Free</a>
+        <a href="{{ url_for('login') }}" class="btn-secondary btn-lg">Log In</a>
+    </div>
+</section>
+
+<div class="landing-quote-card">
+    <span class="landing-quote-label">Today's thought on money</span>
+    <p class="landing-quote-text">"{{ quote }}"</p>
+</div>
+
+<section class="landing-features">
+    <div class="landing-feature">
+        <h3>Simple & Beautiful</h3>
+        <p>Add and review expenses in seconds, on a dashboard built to actually be used.</p>
+    </div>
+    <div class="landing-feature">
+        <h3>Your Currency, Your Way</h3>
+        <p>Choose the currency that matches your life. No defaults forced on you.</p>
+    </div>
+    <div class="landing-feature">
+        <h3>Secure by Design</h3>
+        <p>Your data is protected with industry-standard security practices from day one.</p>
+    </div>
+</section>
+
+{% endblock %}

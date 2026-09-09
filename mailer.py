@@ -29,7 +29,7 @@ def send_email(app, to_address, subject, body):
 
 
 def send_reset_code_email(app, to_address, code):
-    subject = "Your Expense Tracker password reset code"
+    subject = "Your Prism password reset code"
     body = (
         f"Your password reset code is: {code}\n\n"
         "This code expires in 15 minutes. If you didn't request this, you can ignore this email.\n\n"
@@ -39,7 +39,7 @@ def send_reset_code_email(app, to_address, code):
 
 
 def send_verification_code_email(app, to_address, code):
-    subject = "Verify your email for Expense Tracker"
+    subject = "Verify your email for Prism"
     body = (
         f"Your verification code is: {code}\n\n"
         "Enter this code to confirm your email and finish creating your account. "

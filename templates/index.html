@@ -1,3 +1,4 @@
+{% block title %}Dashboard - Prism{% endblock %}
 {% extends "base.html" %}
 {% block title %}Dashboard - Expense Tracker{% endblock %}
 {% block content %}
@@ -42,10 +43,10 @@
     {% if totals %}
         <ul class="totals-list">
             {% for category, amount in totals.items()|sort %}
-                <li><span>{{ category }}</span><span>${{ "%.2f"|format(amount) }}</span></li>
+                <li><span>{{ category }}</span><span>{{ currency_symbol }}{{ "%.2f"|format(amount) }}</span></li>
             {% endfor %}
         </ul>
-        <p class="grand-total">Total: ${{ "%.2f"|format(grand_total) }}</p>
+        <p class="grand-total">Total: {{ currency_symbol }}{{ "%.2f"|format(grand_total) }}</p>
     {% else %}
         <p class="empty-state">No expenses match this filter yet.</p>
     {% endif %}
@@ -66,7 +67,7 @@
             <tr>
                 <td>{{ e.expense_date.strftime("%b %d, %Y") }}</td>
                 <td>{{ e.category }}</td>
-                <td>${{ "%.2f"|format(e.amount) }}</td>
+                <td>{{ currency_symbol }}{{ "%.2f"|format(e.amount) }}</td>
                 <td>{{ e.note }}</td>
                 <td class="row-actions">
                     <a href="{{ url_for('edit', expense_id=e.id) }}" class="edit-link">Edit</a>

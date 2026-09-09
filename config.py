@@ -32,6 +32,9 @@ class Config:
     BREVO_SENDER_NAME = os.environ.get("BREVO_SENDER_NAME", "Prism")
     MAIL_SUPPRESS_SEND = os.environ.get("MAIL_SUPPRESS_SEND", "false").lower() in ("1", "true", "yes")
 
+    ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY")
+    AI_QUOTE_CACHE_MINUTES = int(os.environ.get("AI_QUOTE_CACHE_MINUTES", "60"))
+
 
 class TestConfig(Config):
     TESTING = True
@@ -41,4 +44,8 @@ class TestConfig(Config):
     WTF_CSRF_ENABLED = False
     SESSION_COOKIE_SECURE = False
     BREVO_API_KEY = "test-api-key"
+    BREVO_SENDER_EMAIL = "test@example.com"
+    BREVO_SENDER_NAME = "Prism Test"
     MAIL_SUPPRESS_SEND = True
+    ANTHROPIC_API_KEY = "test-anthropic-key"
+    AI_QUOTE_CACHE_MINUTES = 60
