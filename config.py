@@ -27,11 +27,9 @@ class Config:
 
     RESET_CODE_EXPIRY_MINUTES = 15
 
-    MAIL_SERVER = os.environ.get("MAIL_SERVER", "smtp.gmail.com")
-    MAIL_PORT = int(os.environ.get("MAIL_PORT", "587"))
-    MAIL_USERNAME = os.environ.get("MAIL_USERNAME")
-    MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD")
-    MAIL_DEFAULT_SENDER = os.environ.get("MAIL_DEFAULT_SENDER", MAIL_USERNAME)
+    BREVO_API_KEY = os.environ.get("BREVO_API_KEY")
+    BREVO_SENDER_EMAIL = os.environ.get("BREVO_SENDER_EMAIL")
+    BREVO_SENDER_NAME = os.environ.get("BREVO_SENDER_NAME", "Prism")
     MAIL_SUPPRESS_SEND = os.environ.get("MAIL_SUPPRESS_SEND", "false").lower() in ("1", "true", "yes")
 
 
@@ -42,7 +40,5 @@ class TestConfig(Config):
     SECRET_KEY = "test-secret-key"
     WTF_CSRF_ENABLED = False
     SESSION_COOKIE_SECURE = False
-    MAIL_USERNAME = "test@example.com"
-    MAIL_PASSWORD = "testpass"
-    MAIL_DEFAULT_SENDER = "test@example.com"
+    BREVO_API_KEY = "test-api-key"
     MAIL_SUPPRESS_SEND = True

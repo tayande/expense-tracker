@@ -1,5 +1,6 @@
-import smtplib
-from email.mime.text import MIMEText
+import requests
+
+BREVO_API_URL = "https://api.brevo.com/v3/smtp/email"
 
 
 def send_email(app, to_address, subject, body):
@@ -7,15 +8,24 @@ def send_email(app, to_address, subject, body):
         print(f"[MAIL SUPPRESSED] To: {to_address}\nSubject: {subject}\n{body}")
         return
 
-    msg = MIMEText(body)
-    msg["Subject"] = subject
-    msg["From"] = app.config["MAIL_DEFAULT_SENDER"]
-    msg["To"] = to_address
+    payload = {
+        "sender": {
+            "name": app.config["BREVO_SENDER_NAME"],
+            "email": app.config["BREVO_SENDER_EMAIL"],
+        },
+        "to": [{"email": to_address}],
+        "subject": subject,
+        "textContent": body,
+    }
+    headers = {
+        "accept": "application/json",
+        "api-key": app.config["BREVO_API_KEY"],
+        "content-type": "application/json",
+    }
 
-    with smtplib.SMTP(app.config["MAIL_SERVER"], app.config["MAIL_PORT"]) as server:
-        server.starttls()
-        server.login(app.config["MAIL_USERNAME"], app.config["MAIL_PASSWORD"])
-        server.sendmail(app.config["MAIL_DEFAULT_SENDER"], [to_address], msg.as_string())
+    response = requests.post(BREVO_API_URL, json=payload, headers=headers, timeout=10)
+    if response.status_code >= 300:
+        raise RuntimeError(f"Brevo API error {response.status_code}: {response.text}")
 
 
 def send_reset_code_email(app, to_address, code):
