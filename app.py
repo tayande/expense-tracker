@@ -16,10 +16,10 @@ from flask_wtf import CSRFProtect
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from werkzeug.security import generate_password_hash, check_password_hash
-from sqlalchemy import extract
+from sqlalchemy import extract, func
 
 from config import Config
-from models import db, User, Expense, CATEGORIES, CURRENCIES, CURRENCY_SYMBOLS
+from models import db, User, Expense, Feedback, CATEGORIES, CURRENCIES, CURRENCY_SYMBOLS
 from mailer import send_reset_code_email, send_verification_code_email
 from ai_content import get_daily_quote
 
@@ -30,6 +30,10 @@ EMAIL_RE_SIMPLE_CHECK = lambda s: "@" in s and "." in s.split("@")[-1] and len(s
 # longer values and the page would crash with a 500 error, so we check first.
 MAX_USERNAME_LENGTH = 80
 MAX_NOTE_LENGTH = 255
+
+# Feedback messages are stored as Text (no hard database limit), but we cap
+# them so one message can't be enormous.
+MAX_FEEDBACK_LENGTH = 2000
 
 # Largest amount we accept. Keeps values sane and fits a Numeric(12, 2) column
 # if we switch the database type later.
@@ -545,6 +549,38 @@ def create_app(config_class=Config):
 
         return render_template("edit_expense.html", expense=expense, categories=CATEGORIES, currency_symbol=currency_symbol)
 
+    # ---------------------------------------------------------------
+    # Feedback
+    # ---------------------------------------------------------------
+
+    @app.route("/feedback", methods=["POST"])
+    @login_required
+    @limiter.limit("5 per hour")   # stops one person flooding the inbox
+    def send_feedback():
+        message = request.form.get("message", "").strip()
+        rating_text = request.form.get("rating", "")
+
+        if not message:
+            flash("Please write a message before sending feedback.", "error")
+            return redirect(url_for("index"))
+
+        if len(message) > MAX_FEEDBACK_LENGTH:
+            flash(f"Feedback must be {MAX_FEEDBACK_LENGTH} characters or fewer.", "error")
+            return redirect(url_for("index"))
+
+        # The star rating is optional: empty means "no rating"
+        rating = None
+        if rating_text:
+            if rating_text not in {"1", "2", "3", "4", "5"}:
+                flash("Please choose a rating from 1 to 5 stars.", "error")
+                return redirect(url_for("index"))
+            rating = int(rating_text)
+
+        db.session.add(Feedback(user_id=current_user.id, rating=rating, message=message))
+        db.session.commit()
+        flash("Thanks for your feedback!", "success")
+        return redirect(url_for("index"))
+
     @app.route("/settings", methods=["GET", "POST"])
     @login_required
     def settings():
@@ -615,7 +651,34 @@ def create_app(config_class=Config):
 
         recent_users = User.query.order_by(User.created_at.desc()).limit(10).all()
 
-        return render_template("admin.html", stats=stats, recent_users=recent_users)
+        # --- Feedback inbox (newest first) ---
+        feedback_list = (
+            Feedback.query.order_by(Feedback.created_at.desc(), Feedback.id.desc())
+            .limit(100)
+            .all()
+        )
+        feedback_total = Feedback.query.count()
+        average_rating = db.session.query(func.avg(Feedback.rating)).scalar()  # ignores "no rating"
+
+        # How many expenses each sender has logged, fetched in ONE query
+        # instead of one query per feedback item
+        sender_ids = {f.user_id for f in feedback_list}
+        expense_counts = dict(
+            db.session.query(Expense.owner_id, func.count(Expense.id))
+            .filter(Expense.owner_id.in_(sender_ids))
+            .group_by(Expense.owner_id)
+            .all()
+        ) if sender_ids else {}
+
+        return render_template(
+            "admin.html",
+            stats=stats,
+            recent_users=recent_users,
+            feedback_list=feedback_list,
+            feedback_total=feedback_total,
+            average_rating=average_rating,
+            expense_counts=expense_counts,
+        )
 
     @app.errorhandler(404)
     def not_found(e):
