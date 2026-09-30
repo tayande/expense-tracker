@@ -69,3 +69,21 @@ class Expense(db.Model):
     expense_date = db.Column(db.Date, default=date.today, index=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class Feedback(db.Model):
+    """A message a user sends about the platform, shown to admins.
+
+    This is a brand-new table, so db.create_all() creates it on the next
+    start-up; the existing users/expenses tables are not touched.
+    """
+    __tablename__ = "feedback"
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
+    rating = db.Column(db.Integer, nullable=True)        # 1-5 stars, or None if skipped
+    message = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+
+    # feedback.sender gives the User who wrote it (no database change needed)
+    sender = db.relationship("User", lazy="joined")
