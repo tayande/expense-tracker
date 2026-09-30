@@ -2,7 +2,9 @@
 
 A Flask expense tracker with user accounts, email verification, password reset
 by emailed code, per-user currency, CSV export, and a daily AI-generated money
-quote on the landing page. Uses Postgres in production and SQLite locally.
+quote on the landing page. Users can send feedback with an optional star
+rating, and admins get a dashboard with user stats and the feedback inbox.
+Uses Postgres in production and SQLite locally.
 
 ## Local setup
 
