@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Admin - Prism{% endblock %}
+{% block content %}
+
+<h2>Platform overview</h2>
+<div class="stat-grid">
+    <div class="stat-tile primary">
+        <span class="stat-value">{{ stats.total_users }}</span>
+        <span class="stat-label">Total users</span>
+    </div>
+    <div class="stat-tile">
+        <span class="stat-value">{{ stats.verified_users }}</span>
+        <span class="stat-label">Verified</span>
+    </div>
+    <div class="stat-tile">
+        <span class="stat-value">{{ stats.unverified_users }}</span>
+        <span class="stat-label">Never verified</span>
+    </div>
+    <div class="stat-tile">
+        <span class="stat-value">{{ stats.new_this_week }}</span>
+        <span class="stat-label">Joined in last 7 days</span>
+    </div>
+</div>
+
+<h2>Recent signups</h2>
+<div class="card">
+    {% if recent_users %}
+        {# Wrapper lets the table scroll sideways on narrow phone screens #}
+        <div class="table-scroll">
+        <table>
+            <tr>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Joined</th>
+                <th>Status</th>
+            </tr>
+            {% for u in recent_users %}
+            <tr>
+                <td>{{ u.username }}</td>
+                <td class="muted">{{ u.email }}</td>
+                <td class="nowrap">{{ u.created_at.strftime("%b %d, %Y") if u.created_at else "—" }}</td>
+                <td>
+                    {% if u.email_verified %}
+                        <span class="badge verified">Verified</span>
+                    {% else %}
+                        <span class="badge pending">Pending</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+        </div>
+    {% else %}
+        <p class="empty-state">No one has signed up yet.</p>
+    {% endif %}
+</div>
+
+<a href="{{ url_for('index') }}" class="cancel-link page-back">Back to Dashboard</a>
+{% endblock %}
