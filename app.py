@@ -4,9 +4,10 @@ import math
 import os
 import secrets
 from datetime import datetime, date, timedelta
+from functools import wraps
 
 from flask import (
-    Flask, render_template, request, redirect, url_for, flash, Response
+    Flask, render_template, request, redirect, url_for, flash, Response, abort
 )
 from flask_login import (
     LoginManager, login_user, logout_user, login_required, current_user
@@ -132,6 +133,43 @@ def create_app(config_class=Config):
     @login_manager.user_loader
     def load_user(user_id):
         return db.session.get(User, int(user_id))
+
+    # ---------------------------------------------------------------
+    # Admin access
+    # ---------------------------------------------------------------
+
+    def is_admin(user):
+        """True if this user may open the admin dashboard.
+
+        The email must be listed in ADMIN_EMAILS *and* verified. The
+        verification check matters: without it, someone could sign up
+        with the admin's email address (before the admin does) and get in
+        without ever proving they own that inbox.
+        """
+        return (
+            user.is_authenticated
+            and user.email_verified
+            and user.email.lower() in app.config["ADMIN_EMAILS"]
+        )
+
+    def admin_required(view):
+        """Like @login_required, but also requires an admin.
+
+        Non-admins get a plain 404 "Page not found", so the admin page
+        doesn't even reveal that it exists.
+        """
+        @wraps(view)
+        @login_required
+        def wrapped(*args, **kwargs):
+            if not is_admin(current_user):
+                abort(404)
+            return view(*args, **kwargs)
+        return wrapped
+
+    @app.context_processor
+    def inject_admin_flag():
+        """Make `is_admin` available in every template (for the nav link)."""
+        return {"is_admin": is_admin(current_user)}
 
     # ---------------------------------------------------------------
     # Public landing page
@@ -555,6 +593,29 @@ def create_app(config_class=Config):
             mimetype="text/csv",
             headers={"Content-Disposition": f"attachment; filename=expenses_{current_user.username}.csv"},
         )
+
+    # ---------------------------------------------------------------
+    # Admin dashboard
+    # ---------------------------------------------------------------
+
+    @app.route("/admin")
+    @admin_required
+    def admin_dashboard():
+        week_ago = datetime.utcnow() - timedelta(days=7)
+
+        total_users = User.query.count()
+        verified_users = User.query.filter_by(email_verified=True).count()
+        stats = {
+            "total_users": total_users,
+            "verified_users": verified_users,
+            # Signed up but never entered their email code
+            "unverified_users": total_users - verified_users,
+            "new_this_week": User.query.filter(User.created_at >= week_ago).count(),
+        }
+
+        recent_users = User.query.order_by(User.created_at.desc()).limit(10).all()
+
+        return render_template("admin.html", stats=stats, recent_users=recent_users)
 
     @app.errorhandler(404)
     def not_found(e):
