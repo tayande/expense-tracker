@@ -5,7 +5,7 @@
     <h1>Create Account</h1>
     <form action="{{ url_for('signup') }}" method="post">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <input type="text" name="username" placeholder="Username" required autofocus>
+        <input type="text" name="username" placeholder="Username" required autofocus maxlength="80">
         <input type="email" name="email" placeholder="Email" required>
         <select name="currency_code" required>
             <option value="" disabled selected>Preferred Currency</option>

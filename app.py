@@ -24,6 +24,12 @@ from ai_content import get_daily_quote
 
 EMAIL_RE_SIMPLE_CHECK = lambda s: "@" in s and "." in s.split("@")[-1] and len(s) <= 255
 
+# Maximum text lengths. These MUST match the column sizes in models.py
+# (User.username is String(80), Expense.note is String(255)). Postgres refuses
+# longer values and the page would crash with a 500 error, so we check first.
+MAX_USERNAME_LENGTH = 80
+MAX_NOTE_LENGTH = 255
+
 # Largest amount we accept. Keeps values sane and fits a Numeric(12, 2) column
 # if we switch the database type later.
 MAX_AMOUNT = 9_999_999_999.99
@@ -132,6 +138,10 @@ def create_app(config_class=Config):
 
             if not username or not email or not password:
                 flash("All fields are required.", "error")
+                return render_template("signup.html", currencies=CURRENCIES)
+
+            if len(username) > MAX_USERNAME_LENGTH:
+                flash(f"Username must be {MAX_USERNAME_LENGTH} characters or fewer.", "error")
                 return render_template("signup.html", currencies=CURRENCIES)
 
             if not EMAIL_RE_SIMPLE_CHECK(email):
@@ -403,6 +413,11 @@ def create_app(config_class=Config):
             flash("Amount must be a positive number (up to 9,999,999,999.99).", "error")
             return redirect(url_for("index"))
 
+        # The browser's maxlength can be bypassed, so check on the server too
+        if len(note) > MAX_NOTE_LENGTH:
+            flash(f"Note must be {MAX_NOTE_LENGTH} characters or fewer.", "error")
+            return redirect(url_for("index"))
+
         if category not in CATEGORIES:
             flash("Please choose a valid category.", "error")
             return redirect(url_for("index"))
@@ -444,6 +459,10 @@ def create_app(config_class=Config):
             amount = parse_amount(request.form.get("amount", ""))
             if amount is None:
                 flash("Amount must be a positive number (up to 9,999,999,999.99).", "error")
+                return render_template("edit_expense.html", expense=expense, categories=CATEGORIES, currency_symbol=currency_symbol)
+
+            if len(note) > MAX_NOTE_LENGTH:
+                flash(f"Note must be {MAX_NOTE_LENGTH} characters or fewer.", "error")
                 return render_template("edit_expense.html", expense=expense, categories=CATEGORIES, currency_symbol=currency_symbol)
 
             if category not in CATEGORIES:
