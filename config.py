@@ -35,6 +35,14 @@ class Config:
     ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY")
     AI_QUOTE_CACHE_MINUTES = int(os.environ.get("AI_QUOTE_CACHE_MINUTES", "60"))
 
+    # Emails allowed into the admin dashboard, comma-separated, e.g.
+    # ADMIN_EMAILS="me@example.com,partner@example.com". Empty = no admins.
+    ADMIN_EMAILS = {
+        e.strip().lower()
+        for e in os.environ.get("ADMIN_EMAILS", "").split(",")
+        if e.strip()
+    }
+
 
 class TestConfig(Config):
     TESTING = True
@@ -49,3 +57,4 @@ class TestConfig(Config):
     MAIL_SUPPRESS_SEND = True
     ANTHROPIC_API_KEY = "test-anthropic-key"
     AI_QUOTE_CACHE_MINUTES = 60
+    ADMIN_EMAILS = {"admin@example.com"}
