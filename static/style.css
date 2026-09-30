@@ -653,6 +653,85 @@ tr:hover td {
     line-height: 1.5;
 }
 
+/* ---------- Admin dashboard ---------- */
+
+.stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+}
+
+.stat-tile {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    box-shadow: var(--shadow);
+}
+
+.stat-value {
+    display: block;
+    font-size: 1.9rem;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+}
+
+.stat-label {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+}
+
+/* The headline number gets the brand colour */
+.stat-tile.primary .stat-value {
+    color: var(--primary);
+}
+
+.badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 0.76rem;
+    font-weight: 600;
+}
+
+.badge.verified {
+    background: var(--success-soft);
+    color: var(--success);
+}
+
+.badge.pending {
+    background: var(--error-soft);
+    color: var(--error);
+}
+
+.muted {
+    color: var(--text-muted);
+}
+
+.nowrap {
+    white-space: nowrap;
+}
+
+/* Tables scroll sideways inside their card instead of spilling out */
+.table-scroll {
+    overflow-x: auto;
+}
+
+.page-back {
+    display: inline-block;
+    margin-top: 18px;
+}
+
+@media (max-width: 640px) {
+    .stat-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
 @media (max-width: 640px) {
     .landing-features {
         grid-template-columns: 1fr;
