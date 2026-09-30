@@ -55,5 +55,49 @@
     {% endif %}
 </div>
 
+<h2>
+    Feedback ({{ feedback_total }})
+    {% if average_rating %}
+        <span class="muted feedback-average">· average {{ "%.1f"|format(average_rating) }} ★</span>
+    {% endif %}
+</h2>
+<div class="card">
+    {% if feedback_list %}
+        <ul class="feedback-list">
+            {% for f in feedback_list %}
+            <li class="feedback-item">
+                <div class="feedback-sender">
+                    <strong>{{ f.sender.username }}</strong>
+                    <span class="muted">{{ f.sender.email }}</span>
+                    <span class="feedback-meta">
+                        Joined {{ f.sender.created_at.strftime("%b %d, %Y") if f.sender.created_at else "—" }}
+                        · {{ expense_counts.get(f.user_id, 0) }} expense{{ "" if expense_counts.get(f.user_id, 0) == 1 else "s" }} logged
+                    </span>
+                </div>
+                <div class="feedback-body">
+                    <div class="feedback-top">
+                        {% if f.rating %}
+                            <span class="feedback-stars" title="{{ f.rating }} out of 5">
+                                {{ "★" * f.rating }}<span class="feedback-stars-empty">{{ "★" * (5 - f.rating) }}</span>
+                            </span>
+                        {% else %}
+                            <span class="muted feedback-meta">No rating</span>
+                        {% endif %}
+                        <span class="feedback-meta">{{ f.created_at.strftime("%b %d, %Y %H:%M") }} UTC</span>
+                    </div>
+                    {# Jinja escapes the message automatically, so any HTML a user types is shown as plain text #}
+                    <p class="feedback-message">{{ f.message }}</p>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+        {% if feedback_total > feedback_list|length %}
+            <p class="muted feedback-meta">Showing the latest {{ feedback_list|length }} of {{ feedback_total }}.</p>
+        {% endif %}
+    {% else %}
+        <p class="empty-state">No feedback yet.</p>
+    {% endif %}
+</div>
+
 <a href="{{ url_for('index') }}" class="cancel-link page-back">Back to Dashboard</a>
 {% endblock %}
