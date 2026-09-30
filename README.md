@@ -56,6 +56,7 @@ quote on the landing page. Uses Postgres in production and SQLite locally.
 | `MAIL_SUPPRESS_SEND` | No | `true` prints emails to the terminal instead of sending them. |
 | `ANTHROPIC_API_KEY` | No | Enables the AI-generated quote on the landing page. Without it, a built-in quote is shown. |
 | `AI_QUOTE_CACHE_MINUTES` | No | How long one generated quote is reused. Defaults to `60`. |
+| `ADMIN_EMAILS` | No | Comma-separated emails allowed into the admin dashboard at `/admin`. The account must exist and be verified. |
 
 ## Setting up Brevo to send emails
 
@@ -88,6 +89,7 @@ their spam folder.
    - `BREVO_API_KEY`, `BREVO_SENDER_EMAIL` (and optionally `BREVO_SENDER_NAME`)
    - `MAIL_SUPPRESS_SEND` — `false`
    - `ANTHROPIC_API_KEY` — optional, for AI quotes
+   - `ADMIN_EMAILS` — your own account's email, to unlock `/admin`
    - Leave `FLASK_DEBUG` unset
 4. Deploy. Render sets `PORT` automatically and the app reads it.
 5. If `SECRET_KEY` or `DATABASE_URL` is missing, the app refuses to start and
