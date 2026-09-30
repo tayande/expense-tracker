@@ -1,5 +1,6 @@
 import csv
 import io
+import math
 import os
 import secrets
 from datetime import datetime, date, timedelta
@@ -22,6 +23,36 @@ from mailer import send_reset_code_email, send_verification_code_email
 from ai_content import get_daily_quote
 
 EMAIL_RE_SIMPLE_CHECK = lambda s: "@" in s and "." in s.split("@")[-1] and len(s) <= 255
+
+# Largest amount we accept. Keeps values sane and fits a Numeric(12, 2) column
+# if we switch the database type later.
+MAX_AMOUNT = 9_999_999_999.99
+
+
+def parse_amount(text):
+    """Turn the amount typed into the form into a clean number.
+
+    Returns the amount rounded to 2 decimal places, or None if the input
+    isn't a valid positive amount.
+    """
+    try:
+        amount = float(text)
+    except (TypeError, ValueError):
+        # Not a number at all, e.g. "abc" or an empty box
+        return None
+
+    # float() also accepts the words "nan", "inf" and "infinity".
+    # Those would crash the insert (SQLite) or poison every total (Postgres),
+    # so reject anything that isn't a normal, finite number.
+    if not math.isfinite(amount):
+        return None
+
+    # Round first, so something like 0.001 (which becomes 0.00) is rejected below
+    amount = round(amount, 2)
+    if amount <= 0 or amount > MAX_AMOUNT:
+        return None
+
+    return amount
 
 
 def issue_verification_code(app, user):
@@ -362,19 +393,14 @@ def create_app(config_class=Config):
     @app.route("/add", methods=["POST"])
     @login_required
     def add():
-        amount_text = request.form.get("amount", "")
         category = request.form.get("category", "").strip()
         note = request.form.get("note", "").strip()
         date_text = request.form.get("expense_date", "")
 
-        try:
-            amount = float(amount_text)
-        except ValueError:
-            flash("Amount must be a number.", "error")
-            return redirect(url_for("index"))
-
-        if amount <= 0:
-            flash("Amount must be positive.", "error")
+        # parse_amount rejects text, zero/negative numbers, "nan"/"inf" and huge values
+        amount = parse_amount(request.form.get("amount", ""))
+        if amount is None:
+            flash("Amount must be a positive number (up to 9,999,999,999.99).", "error")
             return redirect(url_for("index"))
 
         if category not in CATEGORIES:
@@ -389,7 +415,7 @@ def create_app(config_class=Config):
 
         expense = Expense(
             owner_id=current_user.id,
-            amount=round(amount, 2),
+            amount=amount,
             category=category,
             note=note,
             expense_date=expense_date,
@@ -410,17 +436,14 @@ def create_app(config_class=Config):
         currency_symbol = CURRENCY_SYMBOLS.get(current_user.currency_code, "$")
 
         if request.method == "POST":
-            amount_text = request.form.get("amount", "")
             category = request.form.get("category", "").strip()
             note = request.form.get("note", "").strip()
             date_text = request.form.get("expense_date", "")
 
-            try:
-                amount = float(amount_text)
-                if amount <= 0:
-                    raise ValueError
-            except ValueError:
-                flash("Amount must be a positive number.", "error")
+            # Same validation as when adding an expense
+            amount = parse_amount(request.form.get("amount", ""))
+            if amount is None:
+                flash("Amount must be a positive number (up to 9,999,999,999.99).", "error")
                 return render_template("edit_expense.html", expense=expense, categories=CATEGORIES, currency_symbol=currency_symbol)
 
             if category not in CATEGORIES:
@@ -433,7 +456,7 @@ def create_app(config_class=Config):
                 flash("Invalid date.", "error")
                 return render_template("edit_expense.html", expense=expense, categories=CATEGORIES, currency_symbol=currency_symbol)
 
-            expense.amount = round(amount, 2)
+            expense.amount = amount
             expense.category = category
             expense.note = note
             db.session.commit()
