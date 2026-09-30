@@ -96,4 +96,28 @@
         <p class="empty-state">No expenses yet — add your first one above.</p>
     {% endif %}
 </div>
+
+<h2>Send Feedback</h2>
+<div class="card">
+    <p class="feedback-intro">Tell us what you think of Prism: what you like, what's missing, or what's broken.</p>
+    <form action="{{ url_for('send_feedback') }}" method="post" class="feedback-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        {# Optional 1-5 star rating. The stars are listed 5 → 1 and shown in
+           reverse, which lets pure CSS light up "this star and all before it". #}
+        <fieldset class="star-rating">
+            <legend>Rating <span class="muted">(optional)</span></legend>
+            <div class="stars">
+                {% for n in range(5, 0, -1) %}
+                    <input type="radio" id="star{{ n }}" name="rating" value="{{ n }}">
+                    <label for="star{{ n }}" title="{{ n }} star{{ 's' if n > 1 }}">★</label>
+                {% endfor %}
+            </div>
+        </fieldset>
+
+        <textarea name="message" rows="4" maxlength="2000" required
+                  placeholder="Your feedback..."></textarea>
+        <button type="submit">Send Feedback</button>
+    </form>
+</div>
 {% endblock %}
