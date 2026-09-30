@@ -92,6 +92,31 @@ h2 {
     text-decoration: underline;
 }
 
+/* Logout form sits in the nav row like a normal link */
+.inline-form {
+    display: inline;
+    margin: 0;
+}
+
+/* A <button> styled to look exactly like the nav links above,
+   overriding the global filled button style */
+.link-button,
+.link-button:hover,
+.link-button:active {
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--primary);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    transform: none;
+}
+
+.link-button:hover {
+    text-decoration: underline;
+}
+
 .theme-toggle {
     background: var(--panel-alt);
     border: 1px solid var(--border);
