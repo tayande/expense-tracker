@@ -19,6 +19,9 @@
         <div class="user-info">
             <span>Hi, <strong>{{ current_user.username }}</strong></span>
             <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle theme">☾</button>
+            {% if is_admin %}
+                <a href="{{ url_for('admin_dashboard') }}">Admin</a>
+            {% endif %}
             <a href="{{ url_for('settings') }}">Settings</a>
             {# Logout is a form (not a link) so it's protected by the CSRF token #}
             <form action="{{ url_for('logout') }}" method="post" class="inline-form">
