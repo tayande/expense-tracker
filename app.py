@@ -108,6 +108,27 @@ def create_app(config_class=Config):
         default_limits=[],
     )
 
+    # --- Per-account limit on code guesses ---
+    # The per-IP limits below can be dodged by switching networks, so we also
+    # count failed attempts per EMAIL ADDRESS. 5 wrong guesses per 15 minutes
+    # (the code's lifetime) out of 1,000,000 possible codes makes guessing hopeless.
+
+    def email_from_form():
+        """Rate-limit key: the email typed into the form, normalised."""
+        return "email:" + request.form.get("email", "").strip().lower()
+
+    def attempt_failed(response):
+        """Only count failed attempts. A correct code redirects (302);
+        a wrong one re-renders the form (200)."""
+        return response.status_code != 302
+
+    code_guess_limit = limiter.limit(
+        "5 per 15 minutes",
+        key_func=email_from_form,
+        methods=["POST"],       # only form submissions, not loading the page
+        deduct_when=attempt_failed,
+    )
+
     @login_manager.user_loader
     def load_user(user_id):
         return db.session.get(User, int(user_id))
@@ -226,6 +247,7 @@ def create_app(config_class=Config):
 
     @app.route("/verify-email", methods=["GET", "POST"])
     @limiter.limit("10 per hour")
+    @code_guess_limit
     def verify_email():
         prefill_email = request.args.get("email", "")
 
@@ -305,6 +327,7 @@ def create_app(config_class=Config):
 
     @app.route("/reset-password", methods=["GET", "POST"])
     @limiter.limit("10 per hour")
+    @code_guess_limit
     def reset_password():
         prefill_email = request.args.get("email", "")
 
