@@ -9,3 +9,4 @@ psycopg2-binary==2.9.12
 gunicorn==26.2.0
 requests==2.33.1
 anthropic==1.4.0
+Pillow==12.3.0
