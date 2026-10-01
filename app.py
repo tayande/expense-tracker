@@ -19,9 +19,10 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import extract, func
 
 from config import Config
-from models import db, User, Expense, Feedback, CATEGORIES, CURRENCIES, CURRENCY_SYMBOLS
+from models import db, User, Expense, Feedback, ProfilePhoto, CATEGORIES, CURRENCIES, CURRENCY_SYMBOLS
 from mailer import send_reset_code_email, send_verification_code_email
 from ai_content import get_daily_quote
+from photos import process_photo, PhotoError
 
 EMAIL_RE_SIMPLE_CHECK = lambda s: "@" in s and "." in s.split("@")[-1] and len(s) <= 255
 
@@ -174,6 +175,33 @@ def create_app(config_class=Config):
     def inject_admin_flag():
         """Make `is_admin` available in every template (for the nav link)."""
         return {"is_admin": is_admin(current_user)}
+
+    # ---------------------------------------------------------------
+    # Profile photo helpers
+    # ---------------------------------------------------------------
+
+    def photo_url(user_id, updated_at):
+        """URL of a user's photo. The ?v= part changes whenever the photo
+        changes, so browsers fetch the new one instead of a cached old one."""
+        return url_for("avatar", user_id=user_id, v=int(updated_at.timestamp()))
+
+    def photo_urls_for(user_ids):
+        """{user_id: photo URL} for the users that have a photo, in ONE query."""
+        if not user_ids:
+            return {}
+        rows = (
+            db.session.query(ProfilePhoto.user_id, ProfilePhoto.updated_at)
+            .filter(ProfilePhoto.user_id.in_(user_ids))
+            .all()
+        )
+        return {user_id: photo_url(user_id, updated_at) for user_id, updated_at in rows}
+
+    @app.context_processor
+    def inject_current_avatar():
+        """Make the logged-in user's photo URL (or None) available to every page."""
+        if not current_user.is_authenticated:
+            return {"current_avatar_url": None}
+        return {"current_avatar_url": photo_urls_for([current_user.id]).get(current_user.id)}
 
     # ---------------------------------------------------------------
     # Public landing page
@@ -597,6 +625,63 @@ def create_app(config_class=Config):
 
         return render_template("settings.html", currencies=CURRENCIES)
 
+    # ---------------------------------------------------------------
+    # Profile photo
+    # ---------------------------------------------------------------
+
+    @app.route("/settings/photo", methods=["POST"])
+    @login_required
+    @limiter.limit("20 per hour")
+    def upload_photo():
+        try:
+            jpeg_bytes = process_photo(request.files.get("photo"))
+        except PhotoError as error:
+            flash(str(error), "error")
+            return redirect(url_for("settings"))
+
+        photo = db.session.get(ProfilePhoto, current_user.id)
+        if photo:
+            photo.data = jpeg_bytes
+            photo.updated_at = datetime.utcnow()
+        else:
+            db.session.add(ProfilePhoto(user_id=current_user.id, data=jpeg_bytes))
+        db.session.commit()
+
+        flash("Profile photo updated.", "success")
+        return redirect(url_for("settings"))
+
+    @app.route("/settings/photo/delete", methods=["POST"])
+    @login_required
+    def delete_photo():
+        photo = db.session.get(ProfilePhoto, current_user.id)
+        if photo:
+            db.session.delete(photo)
+            db.session.commit()
+        flash("Profile photo removed.", "success")
+        return redirect(url_for("settings"))
+
+    @app.route("/avatar/<int:user_id>")
+    @login_required
+    def avatar(user_id):
+        # You can see your own photo; admins can see everyone's (feedback inbox).
+        # Anyone else gets "not found", so photos can't be browsed by id.
+        if user_id != current_user.id and not is_admin(current_user):
+            abort(404)
+
+        photo = db.session.get(ProfilePhoto, user_id)
+        if not photo:
+            abort(404)
+
+        return Response(
+            photo.data,
+            mimetype="image/jpeg",
+            headers={
+                # Browser may reuse it for a day; the ?v= in the URL busts it on change
+                "Cache-Control": "private, max-age=86400",
+                "X-Content-Type-Options": "nosniff",
+            },
+        )
+
     @app.route("/delete/<int:expense_id>", methods=["POST"])
     @login_required
     def delete(expense_id):
@@ -670,8 +755,12 @@ def create_app(config_class=Config):
             .all()
         ) if sender_ids else {}
 
+        # Photo URLs for everyone shown on the page, in one query
+        photo_urls = photo_urls_for({u.id for u in recent_users} | sender_ids)
+
         return render_template(
             "admin.html",
+            photo_urls=photo_urls,
             stats=stats,
             recent_users=recent_users,
             feedback_list=feedback_list,
@@ -683,6 +772,12 @@ def create_app(config_class=Config):
     @app.errorhandler(404)
     def not_found(e):
         return render_template("error.html", code=404, message="Page not found."), 404
+
+    @app.errorhandler(413)
+    def upload_too_large(e):
+        # Raised by Flask before our code runs when an upload is over MAX_CONTENT_LENGTH
+        flash("That photo is too large. Please choose one under 5 MB.", "error")
+        return redirect(url_for("settings"))
 
     @app.errorhandler(429)
     def rate_limited(e):
