@@ -87,3 +87,20 @@ class Feedback(db.Model):
 
     # feedback.sender gives the User who wrote it (no database change needed)
     sender = db.relationship("User", lazy="joined")
+
+
+class ProfilePhoto(db.Model):
+    """A user's profile picture, stored in the database.
+
+    Stored here rather than as a file because Render's web service wipes its
+    disk on every deploy/restart, while the Postgres database is kept.
+    New table, so db.create_all() adds it without touching existing tables.
+    """
+    __tablename__ = "profile_photos"
+
+    # One photo per user, so the user id doubles as the primary key
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), primary_key=True)
+    # deferred = only loaded from the database when actually needed (when the
+    # image itself is served), so checking "has a photo?" stays fast
+    data = db.deferred(db.Column(db.LargeBinary, nullable=False))
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
