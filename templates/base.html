@@ -1,3 +1,4 @@
+{% from "_macros.html" import avatar %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -17,6 +18,10 @@
     <div class="topbar">
         <h1>Prism</h1>
         <div class="user-info">
+            {# Clicking your photo takes you to Settings, where you can change it #}
+            <a href="{{ url_for('settings') }}" class="avatar-link" title="Change profile photo">
+                {{ avatar(current_user, current_avatar_url, "sm") }}
+            </a>
             <span>Hi, <strong>{{ current_user.username }}</strong></span>
             <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle theme">☾</button>
             {% if is_admin %}
