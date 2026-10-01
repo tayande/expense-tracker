@@ -1,6 +1,27 @@
 {% extends "base.html" %}
 {% block title %}Settings - Prism{% endblock %}
+{% from "_macros.html" import avatar %}
 {% block content %}
+<h2>Profile Photo</h2>
+<div class="card photo-card">
+    {{ avatar(current_user, current_avatar_url, "lg") }}
+    <div class="photo-controls">
+        {# enctype="multipart/form-data" is required for file uploads #}
+        <form action="{{ url_for('upload_photo') }}" method="post" enctype="multipart/form-data" class="photo-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="file" name="photo" accept="image/jpeg,image/png,image/webp,image/gif" required>
+            <button type="submit">{{ "Change photo" if current_avatar_url else "Upload photo" }}</button>
+        </form>
+        <p class="photo-hint">JPG, PNG, WebP or GIF, up to 5 MB. It will be cropped to a square.</p>
+        {% if current_avatar_url %}
+            <form action="{{ url_for('delete_photo') }}" method="post" class="inline-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="link-button danger-link">Remove photo</button>
+            </form>
+        {% endif %}
+    </div>
+</div>
+
 <h2>Settings</h2>
 <div class="card">
     <form action="{{ url_for('settings') }}" method="post" class="edit-form">

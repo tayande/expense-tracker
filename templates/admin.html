@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% block title %}Admin - Prism{% endblock %}
+{% from "_macros.html" import avatar %}
 {% block content %}
 
 <h2>Platform overview</h2>
@@ -36,7 +37,12 @@
             </tr>
             {% for u in recent_users %}
             <tr>
-                <td>{{ u.username }}</td>
+                <td>
+                    <span class="user-cell">
+                        {{ avatar(u, photo_urls.get(u.id), "md") }}
+                        {{ u.username }}
+                    </span>
+                </td>
                 <td class="muted">{{ u.email }}</td>
                 <td class="nowrap">{{ u.created_at.strftime("%b %d, %Y") if u.created_at else "—" }}</td>
                 <td>
@@ -67,6 +73,7 @@
             {% for f in feedback_list %}
             <li class="feedback-item">
                 <div class="feedback-sender">
+                    {{ avatar(f.sender, photo_urls.get(f.user_id), "md") }}
                     <strong>{{ f.sender.username }}</strong>
                     <span class="muted">{{ f.sender.email }}</span>
                     <span class="feedback-meta">
