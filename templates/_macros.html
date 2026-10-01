@@ -1,0 +1,12 @@
+{# Reusable bits of HTML. Import with:
+   {% from "_macros.html" import avatar %} #}
+
+{# A round profile picture. If the user has no photo, shows the first
+   letter of their username instead. size: "sm" (top bar), "md" (lists), "lg" (settings) #}
+{% macro avatar(user, url, size="sm") -%}
+    {%- if url -%}
+        <img src="{{ url }}" alt="{{ user.username }}'s profile photo" class="avatar avatar-{{ size }}">
+    {%- else -%}
+        <span class="avatar avatar-{{ size }} avatar-initial" aria-hidden="true">{{ user.username[:1]|upper }}</span>
+    {%- endif -%}
+{%- endmacro %}
