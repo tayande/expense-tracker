@@ -27,6 +27,10 @@ class Config:
 
     RESET_CODE_EXPIRY_MINUTES = 15
 
+    # Largest upload accepted (any request). Profile photos are the only
+    # uploads; 5 MB covers any normal phone photo.
+    MAX_CONTENT_LENGTH = 5 * 1024 * 1024
+
     BREVO_API_KEY = os.environ.get("BREVO_API_KEY")
     BREVO_SENDER_EMAIL = os.environ.get("BREVO_SENDER_EMAIL")
     BREVO_SENDER_NAME = os.environ.get("BREVO_SENDER_NAME", "Prism")
