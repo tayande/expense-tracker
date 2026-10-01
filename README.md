@@ -3,7 +3,8 @@
 A Flask expense tracker with user accounts, email verification, password reset
 by emailed code, per-user currency, CSV export, and a daily AI-generated money
 quote on the landing page. Users can send feedback with an optional star
-rating, and admins get a dashboard with user stats and the feedback inbox.
+rating, upload a profile photo, and admins get a dashboard with user stats
+and the feedback inbox.
 Uses Postgres in production and SQLite locally.
 
 ## Local setup
@@ -103,6 +104,9 @@ their spam folder.
 - All forms (including logout) are protected against CSRF.
 - Login, signup and code pages are rate-limited per IP address, and wrong
   verification/reset codes are limited to 5 per 15 minutes per email address.
+- Profile photos are re-encoded as small JPEGs (which strips hidden data such
+  as GPS location), capped at 5 MB per upload, and only visible to their owner
+  and admins.
 - Never commit `.env`, `venv/` or database files — `.gitignore` covers them.
 
 ## Command-line version
